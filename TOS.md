@@ -30,7 +30,7 @@ or services available on or through any such web sites or services.
 We strongly advise you to read the terms and conditions and privacy policies
 of any third-party web sites or services that you visit.
 
-# Termination
+## Termination
 
 We may terminate or suspend access to our Service immediately, without prior
 notice or liability, for any reason whatsoever, including without limitation
@@ -40,7 +40,7 @@ All provisions of the Terms which by their nature should survive termination
 shall survive termination, including, without limitation, ownership
 provisions, warranty disclaimers, indemnity and limitations of liability.
 
-# Governing Law
+## Governing Law
 
 These Terms shall be governed and construed in accordance with the laws of
 Brazil, without regard to its conflict of law provisions.
@@ -52,7 +52,7 @@ Terms will remain in effect. These Terms constitute the entire agreement
 between us regarding our Service, and supersede and replace any prior
 agreements we might have between us regarding the Service.
 
-# Changes
+## Changes
 
 We reserve the right, at our sole discretion, to modify or replace these Terms
 at any time. If a revision is material we will try to provide at least 15 days
@@ -63,6 +63,6 @@ By continuing to access or use our Service after those revisions become
 effective, you agree to be bound by the revised terms. If you do not agree to
 the new terms, please stop using the Service.
 
-# Contact Us
+## Contact Us
 
 If you have any questions about these Terms, please contact us.
