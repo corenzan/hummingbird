@@ -47,7 +47,7 @@ function getChannel(key) {
   return channel;
 }
 
-function broadcast(channel, sender) {
+function broadcast(message, channel, sender) {
   for (let i = 0; i < channel.clients.length; i++) {
     const client = channel.clients[i];
     if (client !== sender && client.readyState === WebSocket.OPEN) {
@@ -94,6 +94,6 @@ server.on("connection", (client, request) => {
       `${message.length} bytes`
     );
 
-    broadcast(channel, client);
+    broadcast(message, channel, client);
   });
 });
