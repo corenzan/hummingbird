@@ -20,7 +20,7 @@
     "node": ">=10.15.3"
   },
   "dependencies": {
-    "ws": "^6.2.0"
+    "ws": "^7.4.6"
   },
   "devDependencies": {
     "wscat": "^2.2.1"
