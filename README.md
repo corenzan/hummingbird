@@ -1,47 +1,43 @@
-# ws.crz.li
+# Hummingbird
 
-> Public WebSocket server with broadcasting.
+> Action broadcaster for easy multiplayer web applications.
 
 ## About
 
-[ws.crz.li](https://ws.crz.li) is a public WebSocket server with automatic broadcasting based on channels. Channels are derived from the request path. i.e. A message to `wss://ws.crz.li/my/channel` is relayed to every other client connected to the channel `/my/channel`.
+Hummingbird is both an open-source software and a live service that allows web applications based on state reducing and action dispatch to relay actions to other clients.
+
+## Protocol
+
+Hummingbird uses [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) to exchange messages between client and server. When the upgrade request is made, the pathname (e.g. `/my/channel` in `wws://hummingbird.crz.li/my/channel`) is used as channel and incoming messages are relayed to other clients connected on the same channel, like a broadcasting system, but it has a few extra steps to make state synchronization easier. Clients are flagged as either fresh or stale. Fresh clients are free to exchange messages but stale clients will require a _state update_ from a fresh client before receiving any other messages. Also, all exchanged messages are expected to be JSON encoded objects with a `type` field.
+
+![Schema of the protocol](protocol.webp)
+
+It's important to notice that there are limitations with this approach. See [pitfalls](#pitfalls) below.
 
 ## Usage
 
-There's no setup, registration, or configuration required beforehand. Simply instantiate a new [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) object and you're good to go.
-
-Client 1:
+No setup is required. Simply open a new connection and you're good to go. Below is a minimum functional example using React.
 
 ```js
-const ws = new WebSocket("wss://ws.crz.li/my/channel");
-ws.onopen = event => ws.send("Ahoy!");
+function App() {
+  // ...
+}
 ```
 
-Client 2:
+[See it in action](https://codesandbox.com).
 
-```js
-const ws = new WebSocket("wss://ws.crz.li/my/channel");
-ws.onmessage = message => console.log(message); // Ahoy!
-```
+### Pitfalls
+
+- Actions dispatched by a stale client will be relayed to other fresh clients even before a state reconciliation has happened.
+- The client is responsible for state reconciliation upon getting a state update.
+- State updates are client authoritative, i.e. there's no security.
 
 ## Legal
 
-### Terms of Service
+### Terms of use
 
-By using this service you've accepted our [Terms of Use](TOS.md).
-
-### Disclaimer
-
-Last updated: March 15, 2019.
-
-The information contained on https://ws.crz.li server (the "Service") is for general information purposes only.
-
-ws.crz.li assumes no responsibility for errors or omissions in the contents on the Service.
-
-In no event shall ws.crz.li be liable for any special, direct, indirect, consequential, or incidental damages or any damages whatsoever, whether in an action of contract, negligence or other tort, arising out of or in connection with the use of the Service or the contents of the Service. ws.crz.li reserves the right to make additions, deletions, or modification to the contents on the Service at any time without prior notice.
-
-ws.crz.li does not warrant that the server is free of viruses or other harmful components.
+By using the service you agree that you will behave lawfully good.
 
 ### License
 
-The MIT License © 2019 Corenzan.
+Apache-2.0 © 2022 Arthur Corenzan.
