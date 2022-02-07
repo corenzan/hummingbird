@@ -29,17 +29,22 @@ export class Client {
 export class Channel {
   name: string;
   clients: Client[] = [];
+  isWaitingStateUpdateReply = false;
 
   constructor(name: string) {
     this.name = name;
   }
 
-  createStateUpdateAction() {
-    return { type: "sync" };
+  createStateUpdateRequest() {
+    return { type: "stateUpdateRequest" };
   }
 
-  isStateUpdateAction(action: Action) {
-    return action.type === "sync";
+  isStateUpdateRequest(action: Action) {
+    return action.type === "stateUpdateRequest";
+  }
+
+  isStateUpdateReply(action: Action) {
+    return action.type === "stateUpdateReply";
   }
 
   isEmpty() {
@@ -68,15 +73,23 @@ export class Channel {
     if (!freshClient) {
       throw new Error("Coudln't find a fresh client");
     }
-    freshClient.dispatch(this.createStateUpdateAction());
+    freshClient.dispatch(this.createStateUpdateRequest());
   }
 
   handleAction(action: Action, sender: Client) {
-    if (this.isStateUpdateAction(action)) {
+    if (this.isStateUpdateRequest(action)) {
+      if (this.isWaitingStateUpdateReply) {
+        return;
+      }
+      const recipients = this.freshClients.slice(0, 1);
+      this.isWaitingStateUpdateReply = true;
+      this.broadcast(action, recipients);
+    } else if (this.isStateUpdateReply(action)) {
       const recipients = this.staleClients;
       recipients.forEach((client) => {
         client.stale = false;
       });
+      this.isWaitingStateUpdateReply = false;
       this.broadcast(action, recipients);
     } else {
       const recipients = this.freshClients.filter(
