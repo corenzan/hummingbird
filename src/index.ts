@@ -8,15 +8,25 @@ import { App, Client } from "./app";
 const webSocketServer = new WebSocketServer({ noServer: true });
 
 const webServer = createServer((req, resp) => {
+  if (req.url === "/") {
+    resp.writeHead(404);
+  } else {
+    resp.setHeader("Upgrade", "websocket");
+    resp.writeHead(426);
+  }
   resp.end();
 });
 
 const app = new App();
 
 webServer.on("upgrade", (req, socket, head) => {
-  webSocketServer.handleUpgrade(req, socket as Socket, head, (ws) => {
-    webSocketServer.emit("connection", ws, req);
-  });
+  if (req.url === "/") {
+    socket.destroy();
+  } else {
+    webSocketServer.handleUpgrade(req, socket as Socket, head, (ws) => {
+      webSocketServer.emit("connection", ws, req);
+    });
+  }
 });
 
 webSocketServer.on("connection", (socket, req) => {
