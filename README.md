@@ -4,7 +4,7 @@
 
 ## About
 
-Hummingbird is both an open-source software and a live service that allows web applications based on state reducing and action dispatch to relay actions to other clients.
+Hummingbird is both an **open-source software** and a **public live service** that allows web applications based on action dispatching to relay actions to other connected clients.
 
 ## Protocol
 
@@ -16,7 +16,7 @@ It's important to notice that there are limitations with this approach. See [pit
 
 ## Usage
 
-No setup is required. Simply open a new connection and you're good to go.
+No setup is required and the service is free. Simply open a new connection and you're good to go.
 
 ```typescript
 const webSocket = new WebSocket("wws://hummingbird.crz.li/test");
