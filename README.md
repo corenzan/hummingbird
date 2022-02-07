@@ -16,15 +16,58 @@ It's important to notice that there are limitations with this approach. See [pit
 
 ## Usage
 
-No setup is required. Simply open a new connection and you're good to go. Below is a minimum functional example using React.
+No setup is required. Simply open a new connection and you're good to go. Below is a contrived example using React, with important parts commented. You can also [see the full code](https://codesandbox.io/s/hummingbird-demo-cg8z8?file=/src/App.tsx).
 
-```js
-function App() {
-  // ...
+```typescript
+function reducer(state: number, action: Action) {
+  switch (action.type) {
+    // When we receive a state update we need to do some state reconciliation, since it could have changed between request and reply.
+    case "stateUpdateReply":
+      return state + action.payload;
+    case "+1":
+      return state + 1;
+    default:
+      return state;
+  }
+}
+
+export default function App() {
+  const [count, dispatch] = useReducer(reducer, 0);
+
+  const [readyState, broadcast] = useWebSocket({
+    onMessage(action) {
+      // We must respond a state update request with our current state.
+      if (action.type === "stateUpdateRequest") {
+        broadcast({ type: "stateUpdateReply", payload: count });
+      }
+      dispatch(action);
+    },
+  });
+
+  const handleClick = () => {
+    const action = { type: "+1" } as Action;
+
+    // When we click the button we need to:
+    // 1. Dispatch the action to update our own state.
+    dispatch(action);
+    // 2. Relay the action to ther connected clients.
+    broadcast(action);
+  };
+
+  if (readyState !== WebSocket.OPEN) {
+    return <p>Connecting...</p>;
+  }
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={handleClick}>Add 1</button>
+    </div>
+  );
 }
 ```
 
-[See it in action](https://codesandbox.com).
+[See it in action](https://cg8z8.csb.app/). Open in two different tabs and check them out side by side.
 
 ### Pitfalls
 
