@@ -16,7 +16,14 @@ It's important to notice that there are limitations with this approach. See [pit
 
 ## Usage
 
-No setup is required. Simply open a new connection and you're good to go. Below is a contrived example using React, with important parts commented. You can also [see the full code](https://codesandbox.io/s/hummingbird-demo-cg8z8?file=/src/App.tsx).
+No setup is required. Simply open a new connection and you're good to go.
+
+```typescript
+const webSocket = new WebSocket("wws://hummingbird.crz.li/test");
+webSocket.send(JSON.stringify({ type: "someAction" }));
+```
+
+Below is a contrived example using React, with important parts commented. You can also [see the full code](https://codesandbox.io/s/hummingbird-demo-cg8z8?file=/src/App.tsx).
 
 ```typescript
 function reducer(state: number, action: Action) {
