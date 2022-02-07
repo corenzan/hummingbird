@@ -34,7 +34,7 @@ describe("Channel", () => {
     channel.addClient(b);
     expect(channel.clients).toEqual([a, b]);
     expect(b.stale).toBe(true);
-    expect(a.dispatch).toHaveBeenCalledWith(channel.createStateUpdateAction());
+    expect(a.dispatch).toHaveBeenCalledWith(channel.createStateUpdateRequest());
 
     // When the last fresh client disconnects a stale client should be promoted to fresh.
     channel.removeClient(a);
@@ -47,30 +47,44 @@ describe("Channel", () => {
     channel.clients = [new Client(jest.fn()), new Client(jest.fn())];
     channel.clients[0].stale = false;
     const action = { type: "test" };
+    const stateUpdateReq = { type: "stateUpdateRequest" };
+    const stateUpdateReply = { type: "stateUpdateReply" };
 
-    // If we get a action from the fresh client,
-    // there's no other fresh client to receive it.
+    // If we get an action from the fresh client and there isn't a fresh client to receive it we bail.
     channel.handleAction(action, channel.clients[0]);
     expect(channel.clients[0].dispatch).not.toHaveBeenCalled();
     expect(channel.clients[1].dispatch).not.toHaveBeenCalled();
 
-    // If we get action from the stale client,
-    // the fresh client must receive it.
+    // If we get an action from the stale client the fresh client should get it.
     channel.handleAction(action, channel.clients[1]);
     expect(channel.clients[0].dispatch).toHaveBeenCalledWith(action);
 
-    // If we get a state update the stale client
-    // must receive it and be flagged as fresh.
-    const stateUpdate = channel.createStateUpdateAction();
-    channel.handleAction(stateUpdate, channel.clients[0]);
-    expect(channel.clients[1].dispatch).toHaveBeenCalledWith(stateUpdate);
+    // If we get a state update request a fresh client
+    // should get it and the channel be put on waiting.
+    channel.handleAction(stateUpdateReq, channel.clients[0]);
+    expect(channel.clients[0].dispatch).toHaveBeenCalledWith(stateUpdateReq);
+    expect(channel.clients[1].dispatch).not.toHaveBeenCalledWith(
+      stateUpdateReq
+    );
+    expect(channel.isWaitingStateUpdateReply).toBe(true);
+
+    // If we get a state update reply the stale client should get it, the
+    // fresh client should not and channel should be not longer on waiting.
+    channel.handleAction(stateUpdateReply, channel.clients[0]);
+    expect(channel.clients[0].dispatch).not.toHaveBeenCalledWith(
+      stateUpdateReply
+    );
+    expect(channel.clients[1].dispatch).toHaveBeenCalledWith(stateUpdateReply);
     expect(channel.clients[1].stale).toBe(false);
+    expect(channel.isWaitingStateUpdateReply).toBe(false);
   });
 
   test("broadcast", () => {
-    const action = { type: "test" };
     const channel = new Channel("test");
     channel.clients = [new Client(jest.fn()), new Client(jest.fn())];
+    const action = { type: "test" };
+
+    // When we broadcast all recipients should get the action.
     channel.broadcast(action, channel.clients);
     channel.clients.forEach((c) =>
       expect(c.dispatch).toHaveBeenCalledWith(action)
