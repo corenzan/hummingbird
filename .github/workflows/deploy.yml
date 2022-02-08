@@ -1,0 +1,27 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: npm ci
+      - name: Linting
+        run: npm run-script lint
+      - name: Tests
+        run: npm run-script test
+      - name: Prepare to deploy
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+      - name: Deploy
+        run: git push ${{ secrets.DEPLOY_REMOTE }} master
