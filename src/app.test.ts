@@ -59,23 +59,36 @@ describe("Channel", () => {
     channel.handleAction(action, channel.clients[1]);
     expect(channel.clients[0].dispatch).toHaveBeenCalledWith(action);
 
-    // If we get a state update request a fresh client
-    // should get it and the channel be put on waiting.
-    channel.handleAction(stateUpdateReq, channel.clients[0]);
+    // If we get a state update request a fresh client should
+    // get it and the channel should be waiting for reply.
+    channel.handleAction(stateUpdateReq, channel.clients[1]);
     expect(channel.clients[0].dispatch).toHaveBeenCalledWith(stateUpdateReq);
     expect(channel.clients[1].dispatch).not.toHaveBeenCalledWith(
       stateUpdateReq
     );
     expect(channel.isWaitingStateUpdateReply).toBe(true);
 
+    // Any action from a fresh client between a state update
+    // request and a state update reply should be queue up.
+    channel.handleAction(action, channel.clients[0]);
+    expect(channel.clients[1].dispatch).not.toHaveBeenCalledWith(action);
+    expect(channel.catchUpQueue).toEqual([action]);
+
+    // Actions from a stale client should be queued up.
+    channel.handleAction(action, channel.clients[1]);
+    expect(channel.catchUpQueue).toHaveLength(1);
+
     // If we get a state update reply the stale client should get it, the
-    // fresh client should not and channel should be not longer on waiting.
+    // fresh client should not, the catch-up queue should be sent and
+    // the channel should be no longer waiting for reply.
     channel.handleAction(stateUpdateReply, channel.clients[0]);
     expect(channel.clients[0].dispatch).not.toHaveBeenCalledWith(
       stateUpdateReply
     );
     expect(channel.clients[1].dispatch).toHaveBeenCalledWith(stateUpdateReply);
+    expect(channel.clients[1].dispatch).toHaveBeenCalledWith(action);
     expect(channel.clients[1].stale).toBe(false);
+    expect(channel.catchUpQueue).toEqual([]);
     expect(channel.isWaitingStateUpdateReply).toBe(false);
   });
 

@@ -29,6 +29,7 @@ export class Client {
 export class Channel {
   name: string;
   clients: Client[] = [];
+  catchUpQueue: Action[] = [];
   isWaitingStateUpdateReply = false;
 
   constructor(name: string) {
@@ -76,26 +77,41 @@ export class Channel {
     freshClient.dispatch(this.createStateUpdateRequest());
   }
 
+  handleStateUpdateRequest(action: Action) {
+    if (this.isWaitingStateUpdateReply) {
+      return;
+    }
+    const recipients = this.freshClients.slice(0, 1);
+    this.isWaitingStateUpdateReply = true;
+    this.broadcast(action, recipients);
+  }
+
+  handleStateUpdateReply(action: Action) {
+    const recipients = this.staleClients;
+    recipients.forEach((client) => {
+      client.stale = false;
+    });
+    this.isWaitingStateUpdateReply = false;
+    this.broadcast(action, recipients);
+    this.catchUpQueue.forEach((action) => {
+      this.broadcast(action, recipients);
+    });
+    this.catchUpQueue = [];
+  }
+
   handleAction(action: Action, sender: Client) {
     if (this.isStateUpdateRequest(action)) {
-      if (this.isWaitingStateUpdateReply) {
-        return;
-      }
-      const recipients = this.freshClients.slice(0, 1);
-      this.isWaitingStateUpdateReply = true;
-      this.broadcast(action, recipients);
+      this.handleStateUpdateRequest(action);
     } else if (this.isStateUpdateReply(action)) {
-      const recipients = this.staleClients;
-      recipients.forEach((client) => {
-        client.stale = false;
-      });
-      this.isWaitingStateUpdateReply = false;
-      this.broadcast(action, recipients);
+      this.handleStateUpdateReply(action);
     } else {
       const recipients = this.freshClients.filter(
         (client) => client !== sender
       );
       this.broadcast(action, recipients);
+      if (!sender.stale && this.isWaitingStateUpdateReply) {
+        this.catchUpQueue.push(action);
+      }
     }
   }
 
