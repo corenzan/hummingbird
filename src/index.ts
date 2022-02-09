@@ -76,4 +76,14 @@ webSocketServer.on("connection", (socket, req) => {
   });
 });
 
+const pingInterval = setInterval(() => {
+  webSocketServer.clients.forEach((client) => {
+    client.ping();
+  });
+}, 10000);
+
+webSocketServer.on("close", () => {
+  clearInterval(pingInterval);
+});
+
 webServer.listen(parseInt(process.env.PORT || "3000", 10));
